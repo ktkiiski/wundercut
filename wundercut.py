@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+"""
+A solution to the "Brilliant cut" Wundernut coding challenge on fall 2017 by Wunder Dog.
+Just run the script with either Python 2 or 3 in the same directory.
+
+Author: Kimmo Kiiski <kimmo@kii.ski>
+"""
 from __future__ import unicode_literals
 import json
 
