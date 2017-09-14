@@ -4,21 +4,12 @@ import json
 
 
 class CutSet:
-    def __init__(self, cuts, waste, values_by_size):
+    def __init__(self, cuts, value):
         self.cuts = cuts
-        self.waste = waste
-        self.values_by_size = values_by_size
+        self.value = value
     
-    def cut(self, size, value):
-        """
-        Cuts a piece from the remaining waste, adding the value to the total
-        value of the cuts, and decreasing the amount of waste.
-        """
-        return CutSet(self.cuts + [size], self.waste - size, self.values_by_size)
-
-    @property
-    def value(self):
-        return sum((self.values_by_size[size] for size in self.cuts), 0) - self.waste
+    def __add__(self, other):
+        return CutSet(self.cuts + other.cuts, self.value + other.value)
 
 
 def get_solution(material):
@@ -43,10 +34,7 @@ def get_gemstone_solution(cuts, chunks):
     # use a cache dict to remember them.
     cache = {}
     return sum(
-        (
-            get_total_value(cuts, waste, cut_options) for cuts, waste in
-            (get_optimal_cuts(chunk, cut_options, cache) for chunk in chunks)
-        ),
+        (get_optimal_cuts(chunk, cut_options, cache).value for chunk in chunks),
         0
     )
 
@@ -57,27 +45,21 @@ def get_optimal_cuts(chunk, values_by_size, cache):
         return cache[chunk]
     # Get all possible options that the raw/remaining chunk can be cut
     options = [
-        (size, get_optimal_cuts(chunk - size, values_by_size, cache))
+        CutSet([size], value) + get_optimal_cuts(chunk - size, values_by_size, cache)
         for size, value in values_by_size.items()
         if chunk >= size
     ]
     if not options:
         # Cannot be cut (any more)
-        optimal_cuts = ([], chunk)
+        # The value of the remaining material raw chunk is negative!
+        optimal_cuts = CutSet([], -chunk)
     else:
         # Get the optimal futher cuts for each option, and pick the one
         # resulting in the lartest total value
-        optimal_cuts = max(
-            (([size] + cuts, waste) for size, (cuts, waste) in options),
-            key=lambda x: get_total_value(x[0], x[1], values_by_size)
-        )
+        optimal_cuts = max(options, key=lambda cut: cut.value)
     # Save the soution to cache
     cache[chunk] = optimal_cuts
     return optimal_cuts
-
-
-def get_total_value(cuts, waste, values_by_size):
-    return sum((values_by_size[size] for size in cuts), 0) - waste
 
 
 if __name__ == '__main__':
