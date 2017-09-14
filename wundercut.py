@@ -23,13 +23,13 @@ class CutSet:
 
 def get_solution(material):
     """
-    Finds the optimal cuts for the given material (input data).
-    Returns a dict where keys are gemstone type and values are maximum profits.
+    Finds the maximum profit from the optimal cuts for the given material (input data).
+    Returns a list of (<gemstone name>, <max profit>) tuples.
     """
-    return {
-        gemstone: get_max_profit(info['rawChunks'], info['cuts'])
+    return [
+        (gemstone, get_max_profit(info['rawChunks'], info['cuts']))
         for gemstone, info in material.items()
-    }
+    ]
 
 
 def get_max_profit(chunks, cuts):
@@ -46,6 +46,11 @@ def get_max_profit(chunks, cuts):
 
 
 def get_optimal_cuts(chunk, size_values, cache):
+    """
+    Determines the optimal cuts for the given chunk, using the given allowed
+    size-value pairs and the cache dict. Returns a CutSet object, holding
+    the `cuts` list and the total `value`.
+    """
     # Use any already a known optimal solution from the cache
     if chunk in cache:
         return cache[chunk]
@@ -70,12 +75,12 @@ if __name__ == '__main__':
     # Read the input data
     with open('input.json', 'r') as input_file:
         material = json.load(input_file)
-    # Print the optimal cuts as an ASCII table
+    # Print the maximum profits nicely formatted as an ASCII table
     print("Gemstone  | Total value")
     print("----------|-------------")
     total_value = 0
-    for gemstone, value in get_solution(material).items():
-        total_value += value
+    for gemstone, value in get_solution(material):
         print("{:<10}| {:,}".format(gemstone, value))
+        total_value += value
     print("----------|-------------")
     print("Total     | {:,}".format(total_value))
